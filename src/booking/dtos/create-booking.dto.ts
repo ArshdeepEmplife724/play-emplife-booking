@@ -1,6 +1,10 @@
-import { IsString, IsEmail, IsNotEmpty, IsDateString } from 'class-validator';
+import { IsString, IsNotEmpty, IsDateString } from 'class-validator';
 
 export class CreateBookingDto {
+  @IsString()
+  @IsNotEmpty()
+  teamId: string;
+
   @IsString()
   @IsNotEmpty()
   projectManagerId: string;
@@ -9,9 +13,17 @@ export class CreateBookingDto {
   @IsNotEmpty()
   projectManagerName: string;
 
-  @IsEmail()
+  @IsString()
   @IsNotEmpty()
   studentEmail: string;
+
+  @IsString()
+  @IsNotEmpty()
+  studentId: string;
+
+  @IsString()
+  @IsNotEmpty()
+  studentName: string;
 
   @IsDateString()
   @IsNotEmpty()

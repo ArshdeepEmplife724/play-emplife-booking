@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
 import { BookingRepository } from '../repositories/booking.repository';
 import { CreateBookingDto } from '../dtos';
 
@@ -7,8 +7,11 @@ export class BookingController {
   constructor(private readonly bookingRepository: BookingRepository) {}
 
   @Get('timeSlots/:id')
-  async getAvailableTimeSlots(@Param('id') userId: string) {
-    return this.bookingRepository.getAvailableTimeSlots(userId);
+  async getAvailableTimeSlots(
+    @Param('id') userId: string,
+    @Query('teamId') teamId: string,
+  ) {
+    return this.bookingRepository.getTimeSlots(userId, teamId);
   }
 
   @Post()
