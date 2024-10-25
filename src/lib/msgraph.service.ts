@@ -37,25 +37,31 @@ export class MsGraphService {
       );
       return response.data.access_token;
     } catch (error) {
-      console.log(error);
-      throw new BadRequestException('Error in Graph API:', error);
+      console.log(error.response?.data?.error?.message);
+      throw new BadRequestException(
+        'Error in Graph API:',
+        error.response?.data?.error?.message,
+      );
     }
   }
 
-  private async deleteEvent(userId: string, eventId: string) {
+  private async deleteEvent(
+    userId: string,
+    eventId: string,
+    accessToken: string,
+  ) {
     try {
-      const accessToken = await this.getAccessToken();
-      await axios.delete(
-        `${this.baseUrl}/users/{${userId}}/events/${eventId}`,
-        {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
+      await axios.delete(`${this.baseUrl}/users/${userId}/events/${eventId}`, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
         },
-      );
+      });
     } catch (error) {
-      console.log(error);
-      throw new BadRequestException('Error in Graph API:', error);
+      console.log(error.response?.data?.error?.message);
+      throw new BadRequestException(
+        'Error in Graph API:',
+        error.response?.data?.error?.message,
+      );
     }
   }
 
@@ -81,7 +87,7 @@ export class MsGraphService {
       let allEvents = [];
       let nextLink = null;
 
-      let currentUrl = `${this.baseUrl}/users/{${projectManagerId}}/calendar/calendarView?startDateTime=${startDateTime}&endDateTime=${endDateTime}&top=100`;
+      let currentUrl = `${this.baseUrl}/users/${projectManagerId}/calendar/calendarView?startDateTime=${startDateTime}&endDateTime=${endDateTime}&top=100`;
       do {
         try {
           const response = await axios.get(currentUrl, {
@@ -97,8 +103,11 @@ export class MsGraphService {
           nextLink = response.data['@odata.nextLink'];
           currentUrl = nextLink;
         } catch (error) {
-          console.error('Error fetching calendar events:', error);
-          throw error;
+          console.log(error.response?.data?.error?.message);
+          throw new BadRequestException(
+            'Error in Graph API:',
+            error.response?.data?.error?.message,
+          );
         }
       } while (nextLink);
       const timeSlots = allEvents
@@ -118,8 +127,11 @@ export class MsGraphService {
         });
       return timeSlots;
     } catch (error) {
-      console.log(error);
-      throw new BadRequestException('Error in Graph API:', error);
+      console.log(error.response?.data?.error?.message);
+      throw new BadRequestException(
+        'Error in Graph API:',
+        error.response?.data?.error?.message,
+      );
     }
   }
 
@@ -127,7 +139,7 @@ export class MsGraphService {
     try {
       const accessToken = await this.getAccessToken();
       const response = await axios.post(
-        `${this.baseUrl}/users/{${createBookingDto.projectManagerId}}/calendar/events`,
+        `${this.baseUrl}/users/${createBookingDto.projectManagerId}/calendar/events`,
         {
           subject: `1:1 with Project Manager ${createBookingDto.projectManagerName} with Student ${createBookingDto.studentName}`,
           start: {
@@ -159,11 +171,94 @@ export class MsGraphService {
       await this.deleteEvent(
         createBookingDto.projectManagerId,
         createBookingDto.eventId,
+        accessToken,
       );
       return response.data;
     } catch (error) {
-      console.log(error);
-      throw new BadRequestException('Error in Graph API:', error);
+      console.log(error.response?.data?.error?.message);
+      throw new BadRequestException(
+        'Error in Graph API:',
+        error.response?.data?.error?.message,
+      );
+    }
+  }
+
+  async createBookingWindow(
+    timeSlots: {
+      startDateTime: string;
+      endDateTime: string;
+    }[],
+    teamName: string,
+    teamId: string,
+    projectManagerId: string,
+  ) {
+    const accessToken = await this.getAccessToken();
+    for (const ts of timeSlots) {
+      try {
+        await axios.post(
+          `${this.baseUrl}/users/${projectManagerId}/calendar/events`,
+          {
+            subject: `${this.teamSubject}${teamName}`,
+            start: {
+              dateTime: ts.startDateTime,
+              timeZone: 'Asia/Kolkata',
+            },
+            end: {
+              dateTime: ts.endDateTime,
+              timeZone: 'Asia/Kolkata',
+            },
+            categories: [teamId],
+            showAs: 'free',
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+            },
+          },
+        );
+      } catch (error) {
+        console.log(error.response?.data?.error?.message);
+        throw new BadRequestException(
+          'Error in Graph API:',
+          error.response?.data?.error?.message,
+        );
+      }
+    }
+  }
+
+  async rescheduleEvent(
+    startDateTime: string,
+    endDateTime: string,
+    eventId: string,
+    projectManagerId: string,
+  ) {
+    try {
+      const accessToken = await this.getAccessToken();
+      const response = await axios.patch(
+        `${this.baseUrl}/users/${projectManagerId}/calendar/events/${eventId}`,
+        {
+          start: {
+            dateTime: startDateTime,
+            timeZone: 'Asia/Kolkata',
+          },
+          end: {
+            dateTime: endDateTime,
+            timeZone: 'Asia/Kolkata',
+          },
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        },
+      );
+      return response.data;
+    } catch (error) {
+      console.log(error.response?.data?.error?.message);
+      throw new BadRequestException(
+        'Error in Graph API:',
+        error.response?.data?.error?.message,
+      );
     }
   }
 }
