@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   Patch,
@@ -9,6 +10,7 @@ import {
 } from '@nestjs/common';
 import { BookingRepository } from '../repositories/booking.repository';
 import {
+  CancelBookingDto,
   CreateBookingDto,
   CreateBookingWindowDto,
   RescheduleBookingDto,
@@ -39,5 +41,10 @@ export class BookingController {
   @Patch('reschedule')
   async rescheduleBooking(@Body() body: RescheduleBookingDto) {
     return this.bookingRepository.rescheduleBooking(body);
+  }
+
+  @Delete('cancel')
+  async cancelBooking(@Body() body: CancelBookingDto) {
+    return this.bookingRepository.cancelBooking(body);
   }
 }

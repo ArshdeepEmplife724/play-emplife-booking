@@ -261,4 +261,36 @@ export class MsGraphService {
       );
     }
   }
+
+  async removeAttendeesFromEvent(
+    eventId: string,
+    projectManagerId: string,
+    teamName: string,
+    teamId: string,
+  ) {
+    try {
+      const accessToken = await this.getAccessToken();
+      const response = await axios.patch(
+        `${this.baseUrl}/users/${projectManagerId}/calendar/events/${eventId}`,
+        {
+          subject: `${this.teamSubject}${teamName}`,
+          attendees: [],
+          categories: [teamId],
+          showAs: 'free',
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        },
+      );
+      return response.data;
+    } catch (error) {
+      console.log(error.response?.data?.error?.message);
+      throw new BadRequestException(
+        'Error in Graph API:',
+        error.response?.data?.error?.message,
+      );
+    }
+  }
 }

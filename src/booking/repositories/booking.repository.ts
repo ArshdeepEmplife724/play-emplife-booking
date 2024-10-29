@@ -2,6 +2,7 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/db/prisma.service';
 import { MsGraphService } from 'src/lib/msgraph.service';
 import {
+  CancelBookingDto,
   CreateBookingDto,
   CreateBookingWindowDto,
   RescheduleBookingDto,
@@ -224,6 +225,20 @@ export class BookingRepository {
       data: {
         start_time: updatedBooking.start.dateTime,
         end_time: updatedBooking.end.dateTime,
+      },
+    });
+  }
+
+  async cancelBooking(cancelBookingDto: CancelBookingDto) {
+    await this.graphApi.removeAttendeesFromEvent(
+      cancelBookingDto.eventId,
+      cancelBookingDto.projectManagerId,
+      cancelBookingDto.teamName,
+      cancelBookingDto.teamId
+    );
+    await this.prismaService.booking.delete({
+      where: {
+        external_id: cancelBookingDto.eventId,
       },
     });
   }
